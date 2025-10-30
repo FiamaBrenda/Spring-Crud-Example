@@ -1,5 +1,6 @@
 package com.login.exemplo.controllers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.login.exemplo.entity.Usuario;
 import com.login.exemplo.repositories.UsuarioRepository;
+
+import dto.UsuarioResponseDTO;
 
 @RestController
 @RequestMapping("usuario")
@@ -51,8 +54,15 @@ public class UsuarioController {
 	}
 
 	@GetMapping(value = "listar/Fiama")
-	public List<Usuario> listarUsuarios1() {
-		List<Usuario> listaDeUsuarios = usuarioRepository.findAll();
+	public List<UsuarioResponseDTO> listarUsuarios1() {
+		List<Usuario> usuarios = usuarioRepository.findAll();
+		List<UsuarioResponseDTO> listaDeUsuarios = new ArrayList<>();
+		// List<UsuarioResponseDTO> listaDeUsuarios =
+		// usuarios.stream().map(UsuarioResponseDTO::new).toList();
+		for (Usuario usuario : usuarios) {
+			listaDeUsuarios.add(new UsuarioResponseDTO(usuario));
+		}
+
 		return listaDeUsuarios;
 	}
 
@@ -91,7 +101,7 @@ public class UsuarioController {
 			usuarioRepository.save(Usuario);
 			return ResponseEntity.ok(Usuario);
 		} else {
-			//return ResponseEntity.notFound().build();
+			// return ResponseEntity.notFound().build();
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Esse ID não existe");
 		}
 	}
