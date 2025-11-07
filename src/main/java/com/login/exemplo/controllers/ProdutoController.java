@@ -15,69 +15,68 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.login.exemplo.dto.ProdutoResponseDTO;
 import com.login.exemplo.entity.Produto;
 import com.login.exemplo.repositories.ProdutoRepository;
 
 @RestController
-@RequestMapping("produto")
+@RequestMapping("/produto")
 public class ProdutoController {
 
 	@Autowired
 	ProdutoRepository produtoRepository;
-	
+
 	// Buscar por ID
 	@GetMapping("/{id}")
-	public ResponseEntity<?> buscarId(@PathVariable int id){
-		Optional<Produto> produto = produtoRepository.findById(id);		
+	public ResponseEntity<?> buscarId(@PathVariable int id) {
+		Optional<Produto> produto = produtoRepository.findById(id);
 		if (produto.isPresent()) {
-			return ResponseEntity.ok(produto);
+			ProdutoResponseDTO prod = new ProdutoResponseDTO(produto.get());
+			return ResponseEntity.ok(prod);
 		} else {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produto Não Encontrado");
-		}	
+		}
 	}
-	
-	// Busca todos
+
 	@GetMapping
-	public ResponseEntity<?> buscarTodos(){
-		 List<Produto> lista = produtoRepository.findAll();
-		return ResponseEntity.ok(lista);
+	public ResponseEntity<List<ProdutoResponseDTO>> buscarTodos() {
+		List<Produto> lista = produtoRepository.findAll();
+		List<ProdutoResponseDTO> listaDTO = lista.stream().map(ProdutoResponseDTO::new).toList();
+		return ResponseEntity.ok(listaDTO);
 	}
-	
+
 	// Criar produto
 	@PostMapping
-	public ResponseEntity<?> criarProduto(@RequestBody Produto produto){
-		Produto novo = new Produto(
-				produto.getNome(), produto.getPreco(), produto.getQuantidade());
+	public ResponseEntity<?> criarProduto(@RequestBody ProdutoRequestDTO dto) {
+		Produto novo = new Produto(dto.getNome(), dto.getPreco(), dto.getQuantidade());
 		produtoRepository.save(novo);
-		return ResponseEntity.ok(novo);
+		return ResponseEntity.ok(new ProdutoResponseDTO(novo));
 	}
-	
+
 	@DeleteMapping("/{id}")
-	public ResponseEntity<?> deletarId(@PathVariable int id){
-		boolean produto = produtoRepository.existsById(id);		
+	public ResponseEntity<?> deletarId(@PathVariable int id) {
+		boolean produto = produtoRepository.existsById(id);
 		if (produto) {
 			produtoRepository.deleteById(id);
 			return ResponseEntity.ok("Deletado com Sucesso!!");
 		} else {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produto Não Encontrado");
-		}	
-	}
-	
-	@PutMapping("/{id}")
-	public ResponseEntity<?> alterarProduto(@PathVariable int id, 
-			@RequestBody Produto produto){
-		Optional<Produto> novo = produtoRepository.findById(id);
-		
-		if (novo.isPresent()) {
-			Produto e = novo.get();
-			e.setQuantidade(produto.getQuantidade());
-			produtoRepository.save(e);
-			return ResponseEntity.ok(novo);
-		} else {
-			// return ResponseEntity.notFound().build();
-			return ResponseEntity.status(HttpStatus.NOT_FOUND)
-					.body("Esse ID não existe");
 		}
 	}
-	
+
+	@PutMapping("/{id}")
+	public ResponseEntity<?> alterarProduto(@PathVariable int id, @RequestBody ProdutoRequestDTO  produto) {
+		Optional<Produto> produtoExistente = produtoRepository.findById(id);
+
+		if (produtoExistente.isPresent()) {
+			Produto produtoAlterado = produtoExistente.get();
+			produtoAlterado.setQuantidade(produto.getQuantidade());
+			produtoRepository.save(produtoAlterado);
+			return ResponseEntity.ok(new ProdutoResponseDTO(produtoAlterado));
+		} else {
+			// return ResponseEntity.notFound().build();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Esse ID não existe");
+		}
+	}
+
 }

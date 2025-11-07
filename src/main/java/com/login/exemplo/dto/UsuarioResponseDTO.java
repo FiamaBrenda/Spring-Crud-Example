@@ -1,4 +1,4 @@
-package dto;
+package com.login.exemplo.dto;
 
 import com.login.exemplo.entity.Usuario;
 
@@ -7,11 +7,11 @@ public class UsuarioResponseDTO {
 	private int id;
 	private String name;
 	private String email;
-
-	public UsuarioResponseDTO(Usuario usuario) {
-		this.id = usuario.getId();
-		this.name = usuario.getName();
-		this.email = usuario.getEmail();
+	
+	public UsuarioResponseDTO(Usuario user) {
+		this.id = user.getId();
+		this.name = user.getName();
+		this.email = user.getEmail();
 	}
 
 	public int getId() {

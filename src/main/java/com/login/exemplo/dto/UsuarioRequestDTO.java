@@ -1,4 +1,4 @@
-package dto;
+package com.login.exemplo.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,7 +9,7 @@ public class UsuarioRequestDTO {
 	@NotNull(message = "O nome não pode ser nulo")
 	private String name;
 
-	@NotBlank
+	@NotBlank(message = "Digite um e-mail valido")
 	private String email;
 	@Size(min = 6, max = 20, message = "A senha deve ter entre 6 e 20 caracteres")
 	private String password;

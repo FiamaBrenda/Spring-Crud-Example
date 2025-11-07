@@ -1,6 +1,5 @@
 package com.login.exemplo.controllers;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,28 +16,34 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.login.exemplo.dto.UsuarioRequestDTO;
+import com.login.exemplo.dto.UsuarioResponseDTO;
 import com.login.exemplo.entity.Usuario;
 import com.login.exemplo.repositories.UsuarioRepository;
 
-import dto.UsuarioResponseDTO;
+import jakarta.validation.Valid;
+
+//import dto.UsuarioResponseDTO;
 
 @RestController
-@RequestMapping("usuario")
+@RequestMapping("/usuario")
 @CrossOrigin(origins = "*")
 public class UsuarioController {
 
 	@Autowired
 	UsuarioRepository usuarioRepository;
 
-	@PostMapping(value = "cadastro")
-	public ResponseEntity<?> saveUser(@RequestBody Usuario user) {
-		Usuario usuario = new Usuario(user.getName(), user.getEmail(), user.getPassword());
+	@PostMapping(value = "/cadastro")
+	public ResponseEntity<?> saveUser(@Valid @RequestBody UsuarioRequestDTO usuarioRequestDTO) {
+		Usuario usuario = new Usuario(usuarioRequestDTO.getName(), usuarioRequestDTO.getEmail(),
+				usuarioRequestDTO.getPassword());
 		usuarioRepository.save(usuario);
-		return ResponseEntity.ok("Usuario salvo com sucesso" + usuario);
+		UsuarioResponseDTO user = new UsuarioResponseDTO(usuario);
+		return ResponseEntity.status(HttpStatus.CREATED).body(user);
 	}
 
-	@PostMapping(value = "login")
-	public ResponseEntity<?> login(@RequestBody Usuario user) {
+	@PostMapping(value = "/login")
+	public ResponseEntity<?> login(@Valid @RequestBody UsuarioRequestDTO user) {
 		Usuario findUser = usuarioRepository.findByEmail(user.getEmail());
 		if (findUser == null) {
 			return ResponseEntity.ok("Usuario não encontrado");
@@ -56,26 +61,29 @@ public class UsuarioController {
 	@GetMapping(value = "listar/Fiama")
 	public List<UsuarioResponseDTO> listarUsuarios1() {
 		List<Usuario> usuarios = usuarioRepository.findAll();
-		List<UsuarioResponseDTO> listaDeUsuarios = new ArrayList<>();
-		// List<UsuarioResponseDTO> listaDeUsuarios =
-		// usuarios.stream().map(UsuarioResponseDTO::new).toList();
-		for (Usuario usuario : usuarios) {
-			listaDeUsuarios.add(new UsuarioResponseDTO(usuario));
-		}
+		List<UsuarioResponseDTO> listaDeUsuarios = usuarios.stream().map(UsuarioResponseDTO::new).toList();
+//List<UsuarioResponseDTO> listaDeUsuarios = new ArrayList<>();
+//		for (Usuario usuario : usuarios) {
+//			listaDeUsuarios.add(new UsuarioResponseDTO(usuario));
+//		}
 
 		return listaDeUsuarios;
 	}
 
-	@GetMapping(value = "listar/Vitinho")
-	public List<Usuario> listarUsuarios() {
-		return usuarioRepository.findAll();
-	}
+//	@GetMapping(value = "listar/Vitinho")
+//	public List<Usuario> listarUsuarios() {
+//		return usuarioRepository.findAll();
+//	}
 
 	// return ResponseEntity.status(HttpStatus.CREATED).body(dto);
 
 	@GetMapping(value = "{id}")
-	public Optional<Usuario> usuarioPorId(@PathVariable int id) {
-		return usuarioRepository.findById(id);
+	public ResponseEntity<?> usuarioPorId(@PathVariable int id) {
+		Optional<Usuario> usuario = usuarioRepository.findById(id);
+		if (usuario.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
+		}
+		return ResponseEntity.ok(new UsuarioResponseDTO(usuario.get()));
 	}
 
 	// import org.springframework.http.HttpStatus;
@@ -91,15 +99,15 @@ public class UsuarioController {
 	}
 
 	@PutMapping("atualizar/{id}")
-	public ResponseEntity<?> atualizar(@PathVariable int id, @RequestBody Usuario novoUsuario) {
+	public ResponseEntity<?> atualizar(@PathVariable int id, @RequestBody UsuarioRequestDTO novoUsuario) {
 		Optional<Usuario> UsuarioExistente = usuarioRepository.findById(id);
 
 		if (UsuarioExistente.isPresent()) {
-			Usuario Usuario = UsuarioExistente.get();
-			Usuario.setName(novoUsuario.getName());
-			Usuario.setPassword(novoUsuario.getPassword());
-			usuarioRepository.save(Usuario);
-			return ResponseEntity.ok(Usuario);
+			Usuario usuario = UsuarioExistente.get();
+			usuario.setName(novoUsuario.getName());
+			usuario.setPassword(novoUsuario.getPassword());
+			usuarioRepository.save(usuario);
+			return ResponseEntity.ok(new UsuarioResponseDTO(usuario));
 		} else {
 			// return ResponseEntity.notFound().build();
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Esse ID não existe");
